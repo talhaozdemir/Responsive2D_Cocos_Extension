@@ -433,7 +433,7 @@ export function update(this: PanelThis, dump: any) {
         handler.htmlEl.value = this.dump.value[handler.scriptEl].value;
     });
 
-    console.log("TEST123")
+    //console.log("TEST123")
 
     //if (!this.oneTimeFlag) {
     //this.oneTimeFlag = true;
@@ -453,6 +453,17 @@ export function update(this: PanelThis, dump: any) {
         }
         else {
             this.$.disabledContent.className = "disable";
+        }
+
+        //console.log("this.dump.value.lastOrientation", this.dump.value.lastOrientation)
+        if (this.dump.value.lastOrientation.value == true) {
+            this.$.portraitButton.onclick();
+        } else {
+            if (this.dump.value.enableLandscape.value == true) {
+                this.$.landscapeButton.onclick();
+            } else {
+                this.$.portraitButton.onclick(false); // can rotate canvas
+            }
         }
     }
 }
@@ -741,14 +752,16 @@ export function ready(this: PanelThis) {
         target.className += " active";
     }
 
-    this.$.portraitButton.onclick = (e: any) => {
+    this.$.portraitButton.onclick = (canRotateCanvas: any = true) => {
         openTab(this.$.portraitButton, 'Portrait')
 
         const lastCell = getLastCell(this, this.dump.value.portraitAlignment.value);
         cellOnClick(this, lastCell, this.tree);
 
-        this.dump.value.rotateCanvasPortrait.value = true;
-        this.$.rotateCanvasPortrait.dispatch('change-dump');
+        if (canRotateCanvas) {
+            this.dump.value.rotateCanvasPortrait.value = true;
+            this.$.rotateCanvasPortrait.dispatch('change-dump');
+        }
     }
 
     this.$.landscapeButton.onclick = (e: any) => {

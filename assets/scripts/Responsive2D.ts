@@ -90,6 +90,9 @@ export class Responsive2D extends Component {
     @property
     public oneTimeExecution = false;
 
+    @property
+    public lastOrientation = globalThis.rotateCanvas;
+
     private contAnchorXInEditor = 0;
     private contAnchorYInEditor = 0;
 
