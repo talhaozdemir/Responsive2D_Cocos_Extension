@@ -240,8 +240,8 @@ export const template = `
             <option value="7">bottom</option>
         </ui-select>
     </div>
-    <ui-checkbox style="display: block;" value="false" id="enable-portrait-flip-x">Flip X</ui-checkbox>
-    <ui-checkbox style="display: block;" value="false" id="enable-portrait-flip-y">Flip Y</ui-checkbox>
+    <ui-checkbox style="display: block; width: 70px;" value="false" id="enable-portrait-flip-x">Flip X</ui-checkbox>
+    <ui-checkbox style="display: block; width: 70px;" value="false" id="enable-portrait-flip-y">Flip Y</ui-checkbox>
 </div>
 
 <div id="Landscape" class="tabcontent">
@@ -320,8 +320,9 @@ export const template = `
             <option value="7">bottom</option>
         </ui-select>
     </div>
-    <ui-checkbox style="display: block;" value="false" id="enable-landscape-flip-x">Flip X</ui-checkbox>
-    <ui-checkbox style="display: block;" value="false" id="enable-landscape-flip-y">Flip Y</ui-checkbox>
+    <ui-checkbox style="display: block; width: 70px;" value="false" id="enable-landscape-flip-x">Flip X</ui-checkbox>
+    <ui-checkbox style="display: block; width: 70px;" value="false" id="enable-landscape-flip-y">Flip Y</ui-checkbox>
+    <ui-button id="copy-paste-portrait-content" class="red" style="margin-right: 10px; float: right">Paste Portrait</ui-button>
     </div>
 </div>
 
@@ -408,19 +409,116 @@ export const $ = {
     rotateCanvasPortrait: '#rotate-canvas-portrait',
     rotateCanvasLandscape: '#rotate-canvas-landscape',
     changeEditorDevice: '#change-editor-device',
-    disabledContent: '#disabled_content'
+    disabledContent: '#disabled_content',
+    copyPastePortraitContent: '#copy-paste-portrait-content',
     //oneTimeExecution: '#recalculate-content-size'
 };
 
-// export const propList = {
-//     //tree: [{}]
-// }
+export const methodList = {
+    checkEnableLandscape: (_this: any) => {
+        if (_this.dump.value.enableLandscape.value == true) {
+            _this.$.disabledContent.className = "";
+        }
+        else {
+            _this.$.disabledContent.className = "disable";
+        }
+    },
+
+    openTabAccordingToOrientation: (_this: any) => {
+        if (_this.dump.value.lastOrientation.value == true) { // true - dikey
+            _this.$.portraitButton.onclick();
+            //console.log("1");
+        } else { // false -yatay
+            if (_this.dump.value.enableLandscape.value == true) {
+                _this.$.landscapeButton.onclick();
+                //console.log("2");
+            } else {
+                _this.$.portraitButton.onclick(false); // can rotate canvas
+                //console.log("3");
+            }
+        }
+    },
+
+    copyPastePortraitValues: (_this: any) => {
+        let portraitElements = [
+            { p: _this.dump.value.portraitWidthRatio, l: _this.dump.value.landscapeWidthRatio, h: _this.$.landscapeWidthRatio },
+            { p: _this.dump.value.portraitHeightRatio, l: _this.dump.value.landscapeHeightRatio, h: _this.$.landscapeHeightRatio },
+            { p: _this.dump.value.portraitHorSpace, l: _this.dump.value.landscapeHorSpace, h: _this.$.landscapeHorSpace },
+            { p: _this.dump.value.portraitVerSpace, l: _this.dump.value.landscapeVerSpace, h: _this.$.landscapeVerSpace },
+            { p: _this.dump.value.portraitMinMax, l: _this.dump.value.landscapeMinMax, h: _this.$.landscapeMinMax },
+            { p: _this.dump.value.portraitVerSpaceType, l: _this.dump.value.landscapeVerSpaceType, h: _this.$.landscapeVerSpaceType },
+            { p: _this.dump.value.portraitHorSpaceType, l: _this.dump.value.landscapeHorSpaceType, h: _this.$.landscapeHorSpaceType },
+            { p: _this.dump.value.portraitLeftNodeUUID, l: _this.dump.value.landscapeLeftNodeUUID, h: _this.$.landscapeLeftNodeUUID },
+            { p: _this.dump.value.portraitRightNodeUUID, l: _this.dump.value.landscapeRightNodeUUID, h: _this.$.landscapeRightNodeUUID },
+            { p: _this.dump.value.portraitTopNodeUUID, l: _this.dump.value.landscapeTopNodeUUID, h: _this.$.landscapeTopNodeUUID },
+            { p: _this.dump.value.portraitBottomNodeUUID, l: _this.dump.value.landscapeBottomNodeUUID, h: _this.$.landscapeBottomNodeUUID },
+            { p: _this.dump.value.portraitFlipX, l: _this.dump.value.landscapeFlipX, h: _this.$.landscapeFlipX },
+            { p: _this.dump.value.portraitFlipY, l: _this.dump.value.landscapeFlipY, h: _this.$.landscapeFlipY }
+        ];
+
+        portraitElements.forEach(e => {
+            e.l.value = e.p.value;
+            e.h.dispatch("change-dump");
+        })
+
+        //hp -> htmlPortrait
+        let alignmentCells = [
+            { l: _this.dump.value.landscapeAlignment, hp: _this.$.portraitTopLeft, hl: _this.$.landscapeAlignment, hl2: _this.$.landscapeTopLeft },
+            { l: _this.dump.value.landscapeAlignment, hp: _this.$.portraitTopCenter, hl: _this.$.landscapeAlignment, hl2: _this.$.landscapeTopCenter },
+            { l: _this.dump.value.landscapeAlignment, hp: _this.$.portraitTopRight, hl: _this.$.landscapeAlignment, hl2: _this.$.landscapeTopRight },
+            { l: _this.dump.value.landscapeAlignment, hp: _this.$.portraitMidLeft, hl: _this.$.landscapeAlignment, hl2: _this.$.landscapeMidLeft },
+            { l: _this.dump.value.landscapeAlignment, hp: _this.$.portraitMidCenter, hl: _this.$.landscapeAlignment, hl2: _this.$.landscapeMidCenter },
+            { l: _this.dump.value.landscapeAlignment, hp: _this.$.portraitMidRight, hl: _this.$.landscapeAlignment, hl2: _this.$.landscapeMidRight },
+            { l: _this.dump.value.landscapeAlignment, hp: _this.$.portraitBottomLeft, hl: _this.$.landscapeAlignment, hl2: _this.$.landscapeBottomLeft },
+            { l: _this.dump.value.landscapeAlignment, hp: _this.$.portraitBottomCenter, hl: _this.$.landscapeAlignment, hl2: _this.$.landscapeBottomCenter },
+            { l: _this.dump.value.landscapeAlignment, hp: _this.$.portraitBottomRight, hl: _this.$.landscapeAlignment, hl2: _this.$.landscapeBottomRight },
+        ];
+
+        let neededAlignmentIdVal = _this.dump.value.portraitAlignment.value.replace("portrait", "landscape");
+        alignmentCells.forEach(e => {
+            if (neededAlignmentIdVal == e.hl2.id) {
+                e.l.value = neededAlignmentIdVal;
+                e.hl.dispatch('change-dump');
+            }
+        })
+    },
+
+    changeWidthHeightRatioCursorsColor: (_this: any) => {
+        const circularWidthHandler = _this.$.portraitWidthRatio.$cursor.getElementsByTagName("div")[0];
+        const circularWidthVal = +_this.dump.value.portraitWidthRatio.value;
+        const circularHeightHandler = _this.$.portraitHeightRatio.$cursor.getElementsByTagName("div")[0];
+        const circularHeightVal = +_this.dump.value.portraitHeightRatio.value;
+
+        if (_this.dump.value.portraitMinMax.value == 1) {
+            if (circularWidthVal < circularHeightVal) {
+                circularWidthHandler.style.borderColor = "green"
+                circularHeightHandler.style.borderColor = "red"
+            } else {
+                circularWidthHandler.style.borderColor = "red"
+                circularHeightHandler.style.borderColor = "green"
+            }
+        } else if (_this.dump.value.portraitMinMax.value == 2) {
+            if (circularWidthVal > circularHeightVal) {
+                circularWidthHandler.style.borderColor = "green"
+                circularHeightHandler.style.borderColor = "red"
+            } else {
+                circularWidthHandler.style.borderColor = "red"
+                circularHeightHandler.style.borderColor = "green"
+            }
+        } else {
+            circularWidthHandler.style.borderColor = "white"
+            circularHeightHandler.style.borderColor = "white"
+        }
+    }
+}
 
 type PanelThis = Selector<typeof $> & { dump: any, componentHandlers: any, tree: any, oneTimeFlag: boolean };
 
 export function update(this: PanelThis, dump: any) {
     //console.log("UPDATE")
+    //console.log("FROM UPDATE");
     this.dump = dump;
+
 
     this.$.portraitAlignment.dump = this.dump.value.portraitAlignment;
     this.$.portraitAlignment.value = this.dump.value.portraitAlignment.value;
@@ -446,114 +544,174 @@ export function update(this: PanelThis, dump: any) {
     // }, 500);
     //}
 
+    //if (!this.oneTimeFlag) {
+    //this.oneTimeFlag = true;
+    methodList.checkEnableLandscape(this);
+
     if (!this.oneTimeFlag) {
         this.oneTimeFlag = true;
-        if (this.dump.value.enableLandscape.value == true) { // same block exists below, adjust this later
-            this.$.disabledContent.className = "";
-        }
-        else {
-            this.$.disabledContent.className = "disable";
-        }
-
-        //console.log("this.dump.value.lastOrientation", this.dump.value.lastOrientation)
-        if (this.dump.value.lastOrientation.value == true) {
-            this.$.portraitButton.onclick();
-        } else {
-            if (this.dump.value.enableLandscape.value == true) {
-                this.$.landscapeButton.onclick();
-            } else {
-                this.$.portraitButton.onclick(false); // can rotate canvas
-            }
-        }
+        methodList.openTabAccordingToOrientation(this);
     }
+
+
 }
 export function ready(this: PanelThis) {
     // Listen for commit events on the input, update the dump data when the input commits data, and use prop to send change-dump events
     //console.log("READY")
-
     // const refreshCell = () => {
     //     //sometimes when a ref node is added, node placement is not updated, to fix this I added this method
     //     const lastCell = getLastCell(this, this.dump.value.portraitAlignment.value);
     //     cellOnClick(this, lastCell, this.tree);
     // }
+    //console.log("FROM READY");
 
     this.componentHandlers = [
         {
             htmlEl: this.$.portraitWidthRatio,
             scriptEl: "portraitWidthRatio",
-            onChange: true
+            onChange: true,
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeWidthRatio.value = this.dump.value.portraitWidthRatio.value;
+                    this.$.landscapeWidthRatio.dispatch("change-dump")
+                }
+
+                methodList.changeWidthHeightRatioCursorsColor(this);
+            },
         },
         {
             htmlEl: this.$.portraitHeightRatio,
             scriptEl: "portraitHeightRatio",
-            onChange: true
+            onChange: true,
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeHeightRatio.value = this.dump.value.portraitHeightRatio.value;
+                    this.$.landscapeHeightRatio.dispatch("change-dump")
+                }
+
+                methodList.changeWidthHeightRatioCursorsColor(this);
+            }
         },
         {
             htmlEl: this.$.portraitHorSpace,
             scriptEl: "portraitHorSpace",
-            onChange: true
+            onChange: true,
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeHorSpace.value = this.dump.value.portraitHorSpace.value;
+                    this.$.landscapeHorSpace.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitVerSpace,
             scriptEl: "portraitVerSpace",
-            onChange: true
+            onChange: true,
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeVerSpace.value = this.dump.value.portraitVerSpace.value;
+                    this.$.landscapeVerSpace.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitMinMax,
             scriptEl: "portraitMinMax",
-            onChange: true
+            onChange: true,
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeMinMax.value = this.dump.value.portraitMinMax.value;
+                    this.$.landscapeMinMax.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitVerSpaceType,
             scriptEl: "portraitVerSpaceType",
-            onChange: true
+            onChange: true,
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeVerSpaceType.value = this.dump.value.portraitVerSpaceType.value;
+                    this.$.landscapeVerSpaceType.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitHorSpaceType,
             scriptEl: "portraitHorSpaceType",
-            onChange: true
+            onChange: true,
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeHorSpaceType.value = this.dump.value.portraitHorSpaceType.value;
+                    this.$.landscapeHorSpaceType.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitLeftNodeUUID,
             scriptEl: "portraitLeftNodeUUID",
             onChange: true,
-            // callback: () => {
-            //     refreshCell();
-            // }
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeLeftNodeUUID.value = this.dump.value.portraitLeftNodeUUID.value;
+                    this.$.landscapeLeftNodeUUID.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitRightNodeUUID,
             scriptEl: "portraitRightNodeUUID",
             onChange: true,
-            // callback: () => {
-            //     refreshCell();
-            // }
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeRightNodeUUID.value = this.dump.value.portraitRightNodeUUID.value;
+                    this.$.landscapeRightNodeUUID.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitTopNodeUUID,
             scriptEl: "portraitTopNodeUUID",
             onChange: true,
-            // callback: () => {
-            //     refreshCell();
-            // }
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeTopNodeUUID.value = this.dump.value.portraitTopNodeUUID.value;
+                    this.$.landscapeTopNodeUUID.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitBottomNodeUUID,
             scriptEl: "portraitBottomNodeUUID",
             onChange: true,
-            // callback: () => {
-            //     refreshCell();
-            // }
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeBottomNodeUUID.value = this.dump.value.portraitBottomNodeUUID.value;
+                    this.$.landscapeBottomNodeUUID.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitFlipX,
             scriptEl: "portraitFlipX",
-            onChange: true
+            onChange: true,
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeFlipX.value = this.dump.value.portraitFlipX.value;
+                    this.$.landscapeFlipX.dispatch("change-dump")
+                }
+            }
         },
         {
             htmlEl: this.$.portraitFlipY,
             scriptEl: "portraitFlipY",
-            onChange: true
+            onChange: true,
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeFlipY.value = this.dump.value.portraitFlipY.value;
+                    this.$.landscapeFlipY.dispatch("change-dump")
+                }
+            }
         },
 
 
@@ -562,13 +720,7 @@ export function ready(this: PanelThis) {
             scriptEl: "enableLandscape",
             onChange: true,
             callback: () => {
-                /* disabled_content */
-                if (this.dump.value.enableLandscape.value == true) {
-                    this.$.disabledContent.className = "";
-                }
-                else {
-                    this.$.disabledContent.className = "disable";
-                }
+                methodList.checkEnableLandscape(this);
             }
         },
 
@@ -717,6 +869,10 @@ export function ready(this: PanelThis) {
 
             handler.htmlEl.dispatch('change-dump');
 
+            if (handler.afterCallback) {
+                handler.afterCallback();
+            }
+
         });
 
         if (handler.onChange) {
@@ -728,6 +884,10 @@ export function ready(this: PanelThis) {
                 }
 
                 handler.htmlEl.dispatch('change-dump');
+
+                if (handler.afterCallback) {
+                    handler.afterCallback();
+                }
             }
         }
     });
@@ -758,7 +918,7 @@ export function ready(this: PanelThis) {
         const lastCell = getLastCell(this, this.dump.value.portraitAlignment.value);
         cellOnClick(this, lastCell, this.tree);
 
-        if (canRotateCanvas) {
+        if (canRotateCanvas && this.dump.value.enableLandscape.value) {
             this.dump.value.rotateCanvasPortrait.value = true;
             this.$.rotateCanvasPortrait.dispatch('change-dump');
         }
@@ -847,6 +1007,10 @@ export function ready(this: PanelThis) {
         });
     })
 
+    this.$.copyPastePortraitContent.onclick = () => {
+        methodList.copyPastePortraitValues(this);
+    }
+
 }
 
 
@@ -861,6 +1025,11 @@ function cellOnClick(_this: any, clickedCell: any, tree: any) {
         //console.log("P");
         _this.dump.value.portraitAlignment.value = clickedCell.id;
         _this.$.portraitAlignment.dispatch('change-dump');
+
+        if (!_this.dump.value.enableLandscape.value) {
+            _this.dump.value.landscapeAlignment.value = clickedCell.id.replace("portrait", "landscape");
+            _this.$.landscapeAlignment.dispatch('change-dump');
+        }
     } else {
         //console.log("L");
         _this.dump.value.landscapeAlignment.value = clickedCell.id;

@@ -104,6 +104,7 @@ export class Responsive2D extends Component {
     private isEventsAdded = false;
     private refNodes = [];
     private nodeInd = null;
+    private canUpdate = true;
 
     start() {
         this.oneTimeExecution = false;
@@ -117,6 +118,10 @@ export class Responsive2D extends Component {
     }
 
     resize() {
+
+        if (!this.canUpdate) {
+            return;
+        }
 
         this.rotateUiCanvas();
         this.switchDevice();
@@ -565,6 +570,8 @@ export class Responsive2D extends Component {
 
             globalThis.rotateCanvas = false;
         }
+
+        this.lastOrientation = globalThis.rotateCanvas;
     }
 
     switchDevice() {
@@ -584,6 +591,16 @@ export class Responsive2D extends Component {
                 this.resize();
             }
         }
+    }
+
+    onEnable() {
+        //console.log("ENABLED");
+        this.canUpdate = true;
+    }
+
+    onDisable() {
+        //console.log("DISABLED");
+        this.canUpdate = false;
     }
 }
 
