@@ -214,6 +214,9 @@ export const template = `
         </div>
         <div class="empty-area"></div>
     </div>
+
+    <ui-checkbox value="false" id="portratit-follow-node">Follow Node</ui-checkbox>
+
     <div class="space-input" style="margin-top: 10px;">
         <label class="slider-label-narrow">Hor Space</label>
         <ui-slider class="cocos-slider-2" id="portrait-hor-space" step="0.5" value="0" min="-100" max="100"></ui-slider>

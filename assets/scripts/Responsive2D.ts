@@ -30,6 +30,10 @@ export class Responsive2D extends Component {
     @property
     public portraitRightNodeUUID = "";
     @property
+    public portraitFollowNode = false;
+    @property
+    public portraitFollowedNodeUUID = false;
+    @property
     public portraitMinMax = 1;
     @property
     public portraitFlipX = false;
@@ -60,6 +64,11 @@ export class Responsive2D extends Component {
     public landscapeLeftNodeUUID = "";
     @property
     public landscapeRightNodeUUID = "";
+    @property
+    public landscapeFollowNode = false;
+    @property
+    public landscapeFollowedNodeUUID = false;
+    @property
     @property
     public landscapeMinMax = 1;
     @property
@@ -555,20 +564,20 @@ export class Responsive2D extends Component {
     rotateUiCanvas() {
         if (this.rotateCanvas) {
             this.rotateCanvas = false;
-
             globalThis.rotateCanvas = !globalThis.rotateCanvas;
+            setEditorDeviceAndCanvasDesignResolution();
         }
 
         if (this.rotateCanvasPortrait) {
             this.rotateCanvasPortrait = false;
-
             globalThis.rotateCanvas = true;
+            setEditorDeviceAndCanvasDesignResolution();
         }
 
         if (this.rotateCanvasLandscape) {
             this.rotateCanvasLandscape = false;
-
             globalThis.rotateCanvas = false;
+            setEditorDeviceAndCanvasDesignResolution();
         }
 
         this.lastOrientation = globalThis.rotateCanvas;
@@ -577,8 +586,8 @@ export class Responsive2D extends Component {
     switchDevice() {
         if (this.changeEditorDevice) {
             this.changeEditorDevice = false;
-
             globalThis.editorDeviceNo = (globalThis.editorDeviceNo + 1) % 3 + 1;
+            setEditorDeviceAndCanvasDesignResolution();
         }
     }
 
@@ -602,5 +611,56 @@ export class Responsive2D extends Component {
         //console.log("DISABLED");
         this.canUpdate = false;
     }
+
+
 }
 
+function setEditorDeviceAndCanvasDesignResolution() {
+    if (!globalThis.editorDeviceNo) {
+        globalThis.editorDeviceNo = 1;
+        globalThis.rotateCanvas = true;
+    }
+
+    var deviceSize = getDeviceSize(globalThis.editorDeviceNo, globalThis.rotateCanvas);
+
+    const screenSize = screen.windowSize;
+    const viewScaleX = view.getScaleX();
+    const viewScaleY = view.getScaleY();
+    let w = (deviceSize && deviceSize.width) || screenSize.width / viewScaleX;
+    let h = (deviceSize && deviceSize.height) || screenSize.height / viewScaleY;
+
+    view.setDesignResolutionSize(w, h, view.getResolutionPolicy());
+    //  view.resizeWithBrowserSize(true);
+}
+
+function getDeviceSize(deviceType, orientation) {
+    let width = 100;
+    let height = 100;
+    if (deviceType == 1) { //iphone7plus
+        if (orientation) {
+            width = 414;
+            height = 736;
+        } else {
+            height = 414;
+            width = 736;
+        }
+    } else if (deviceType == 2) { //iphoneX
+        if (orientation) {
+            width = 375;
+            height = 812;
+        } else {
+            height = 375;
+            width = 812;
+        }
+    } else if (deviceType == 3) { //ipad
+        if (orientation) {
+            width = 834;
+            height = 1112;
+        } else {
+            height = 834;
+            width = 1112;
+        }
+    }
+
+    return { width, height }
+}
