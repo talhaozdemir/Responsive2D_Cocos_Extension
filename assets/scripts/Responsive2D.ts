@@ -32,7 +32,7 @@ export class Responsive2D extends Component {
     @property
     public portraitFollowNode = false;
     @property
-    public portraitFollowedNodeUUID = false;
+    public portraitFollowedNodeUUID = "";
     @property
     public portraitMinMax = 1;
     @property
@@ -84,6 +84,9 @@ export class Responsive2D extends Component {
     @property
     public alignMode = 3;
 
+    @property
+    public usingMinOrMax = 0; // change editor slider color according to min max
+
 
     @property
     public rotateCanvas = false;
@@ -101,6 +104,11 @@ export class Responsive2D extends Component {
 
     @property
     public lastOrientation = globalThis.rotateCanvas;
+
+    @property
+    public currentNodeInEditorFlag = false;
+    @property
+    public currentNodeInEditor = null;
 
     private contAnchorXInEditor = 0;
     private contAnchorYInEditor = 0;
@@ -130,6 +138,15 @@ export class Responsive2D extends Component {
 
         if (!this.canUpdate) {
             return;
+        }
+
+        if (this.currentNodeInEditorFlag && globalThis.currentNodeInEditor != this.node.uuid) {
+            this.currentNodeInEditorFlag = false;
+
+            this.currentNodeInEditor = this.node.uuid;
+            globalThis.currentNodeInEditor = this.currentNodeInEditor;
+            console.log(this.currentNodeInEditor, this.node.name)
+
         }
 
         this.rotateUiCanvas();
@@ -176,6 +193,8 @@ export class Responsive2D extends Component {
         let rightNodeUUID = (w > h && this.enableLandscape) ? this.landscapeRightNodeUUID : this.portraitRightNodeUUID;
         let topNodeUUID = (w > h && this.enableLandscape) ? this.landscapeTopNodeUUID : this.portraitTopNodeUUID;
         let bottomNodeUUID = (w > h && this.enableLandscape) ? this.landscapeBottomNodeUUID : this.portraitBottomNodeUUID;
+        let canFollowNode = (w > h && this.enableLandscape) ? this.landscapeFollowNode : this.portraitFollowNode;
+        let followedNodeUUID = (w > h && this.enableLandscape) ? this.landscapeFollowedNodeUUID : this.portraitFollowedNodeUUID;
         let alignment = (w > h && this.enableLandscape) ? this.landscapeAlignment : this.portraitAlignment;
         let horSpace = (w > h && this.enableLandscape) ? this.landscapeHorSpace : this.portraitHorSpace;
         let verSpace = (w > h && this.enableLandscape) ? this.landscapeVerSpace : this.portraitVerSpace;
@@ -195,20 +214,31 @@ export class Responsive2D extends Component {
         let rightNode = null;
         let topNode = null;
         let bottomNode = null;
+        let followedNode = null;
         this.refNodes = [];
         allChildNodes.children.forEach(child => {
             if (child.uuid == leftNodeUUID) {
                 leftNode = child;
                 this.refNodes.push(leftNode);
-            } else if (child.uuid == rightNodeUUID) {
+            }
+
+            if (child.uuid == rightNodeUUID) {
                 rightNode = child;
                 this.refNodes.push(rightNode);
-            } if (child.uuid == topNodeUUID) {
+            }
+
+            if (child.uuid == topNodeUUID) {
                 topNode = child;
                 this.refNodes.push(topNode);
-            } if (child.uuid == bottomNodeUUID) {
+            }
+
+            if (child.uuid == bottomNodeUUID) {
                 bottomNode = child;
                 this.refNodes.push(bottomNode);
+            }
+
+            if (child.uuid == followedNodeUUID) {
+                followedNode = child;
             }
         });
 
@@ -287,6 +317,17 @@ export class Responsive2D extends Component {
             height -= Math.abs(mostBottom - bottom);
         }
 
+        if (canFollowNode && followedNode) {
+            const followedNodeInd = followedNode.parent.children.indexOf(followedNode);
+            followedNode.getComponent(Responsive2D).resize();
+            if (followedNodeInd > this.nodeInd) {
+            }
+
+            const followedNodeTransform = followedNode.getComponent(UITransform);
+            followedNode.displayWidth = followedNodeTransform.width * Math.abs(followedNode.scale.x);
+            followedNode.displayHeight = followedNodeTransform.height * Math.abs(followedNode.scale.y);
+        }
+
 
         let scaleX;
         let scaleY;
@@ -295,13 +336,16 @@ export class Responsive2D extends Component {
             let scale = Math.min(scaleObj.x, scaleObj.y);
             scaleX = scale;
             scaleY = scale;
+            changeEditorSliderCursorColor(this, 1, scaleObj);
         } else if (minMax == 2) {
             let scale = Math.max(scaleObj.x, scaleObj.y);
             scaleX = scale;
             scaleY = scale;
+            changeEditorSliderCursorColor(this, 2, scaleObj);
         } else if (minMax == 3) {
             scaleX = scaleObj.x;
             scaleY = scaleObj.y;
+            changeEditorSliderCursorColor(this, 3, scaleObj);
         }
 
         let flipScalar = { x: 1, y: 1 };
@@ -341,6 +385,15 @@ export class Responsive2D extends Component {
             } else if (horizontalSpaceType == 7) { // bottom node
                 space = (horSpace * 0.01) * (bottomNode ? bottomNode.displayWidth : width);
                 !bottomNode && console.warn("bottomNode cannot found! Using available width space for " + this.node.name);
+            }
+
+            if (canFollowNode && followedNode) {
+                node.setPosition(
+                    this.getWorldPos(followedNode).x + space,
+                    node.position.y,
+                    node.position.z
+                );
+                return;
             }
 
             switch (splittedAlignment[2]) {
@@ -428,6 +481,16 @@ export class Responsive2D extends Component {
                 space = (verSpace * 0.01) * (bottomNode ? bottomNode.displayHeight : height);
                 !bottomNode && console.warn("bottomNode cannot found! Using available height space for " + this.node.name);
             }
+
+            if (canFollowNode && followedNode) {
+                node.setPosition(
+                    node.position.x,
+                    this.getWorldPos(followedNode).y + space,
+                    node.position.z
+                );
+                return;
+            }
+
             switch (splittedAlignment[1]) {
                 case "top": //top
                     var offsetHeight;
@@ -612,6 +675,12 @@ export class Responsive2D extends Component {
         this.canUpdate = false;
     }
 
+    getWorldPos(targetNode) {
+
+        //console.log(this.node.getPathInHierarchy(), targetNode.getPathInHierarchy())
+
+        return { x: targetNode.position.x, y: targetNode.position.y }
+    }
 
 }
 
@@ -663,4 +732,30 @@ function getDeviceSize(deviceType, orientation) {
     }
 
     return { width, height }
+}
+
+function changeEditorSliderCursorColor(_this, type, scaleObj) {
+    if (!EDITOR) {
+        return;
+    }
+
+    if (type == 1) {
+        if (scaleObj.x < scaleObj.y) {
+            _this.usingMinOrMax = 1; // width ratio will be green
+        } else if (scaleObj.x > scaleObj.y) {
+            _this.usingMinOrMax = 2; // height ratio will be green
+        } else {
+            _this.usingMinOrMax = 0;
+        }
+    } else if (type == 2) {
+        if (scaleObj.x < scaleObj.y) {
+            _this.usingMinOrMax = 2; // height ratio will be green
+        } else if (scaleObj.x > scaleObj.y) {
+            _this.usingMinOrMax = 1; // width ratio will be green
+        } else {
+            _this.usingMinOrMax = 0;
+        }
+    } else if (type == 3) {
+        _this.usingMinOrMax = 0;
+    }
 }

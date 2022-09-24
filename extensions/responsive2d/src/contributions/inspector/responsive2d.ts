@@ -26,7 +26,7 @@ export const template = `
         border-top: none;
         background-color: #292929;
         color: white;
-        height: 450px;
+        height: 500px;
     }
 
     .scale-components {
@@ -153,6 +153,11 @@ export const template = `
         pointer-events: none;
         opacity: 0.4;
     }
+
+    .disable-child {
+        pointer-events: none;
+        opacity: 0.4;
+    }
 </style>
 
 <div class="tab">
@@ -183,7 +188,7 @@ export const template = `
             <option value="3">stretch</option>
         </ui-select>
     </div>
-    <div class="widget-wrapper">
+    <div class="widget-wrapper" id="portrait-widget">
         <div class="empty-area"></div>
         <div class="top-node">
             <ui-node droppable="cc.Node" id="portrait-top-node-uuid" class="ref-node"></ui-node>
@@ -215,7 +220,8 @@ export const template = `
         <div class="empty-area"></div>
     </div>
 
-    <ui-checkbox value="false" id="portratit-follow-node">Follow Node</ui-checkbox>
+    <ui-checkbox style="margin-right: 10px; margin-top: 20px;" value="false" id="portrait-follow-node">Follow Node</ui-checkbox>
+    <ui-node style="margin-top: 20px;" droppable="cc.Node" id="portrait-followed-node-uuid"></ui-node>
 
     <div class="space-input" style="margin-top: 10px;">
         <label class="slider-label-narrow">Hor Space</label>
@@ -266,7 +272,7 @@ export const template = `
             <option value="3">stretch</option>
         </ui-select>
     </div>
-    <div class="widget-wrapper">
+    <div class="widget-wrapper" id="landscape-widget">
         <div class="empty-area"></div>
         <div class="top-node">
             <ui-node droppable="cc.Node" id="landscape-top-node-uuid" class="ref-node"></ui-node>
@@ -297,6 +303,10 @@ export const template = `
         </div>
         <div class="empty-area"></div>
     </div>
+
+    <ui-checkbox style="margin-right: 10px" value="false" id="landscape-follow-node">Follow Node</ui-checkbox>
+    <ui-node droppable="cc.Node" id="landscape-followed-node-uuid"></ui-node>
+
     <div class="space-input" style="margin-top: 10px;">
         <label class="slider-label-narrow">Hor Space</label>
         <ui-slider class="cocos-slider-2" id="landscape-hor-space" step="0.5" value="0" min="-100" max="100"></ui-slider>
@@ -355,6 +365,8 @@ export const $ = {
     portrait: '#Portrait',
     landscape: '#Landscape',
     settings: '#Settings',
+    portraitWidget: '#portrait-widget',
+    landscapeWidget: '#landscape-widget',
 
     portraitAlignment: '#portrait-alignment',
     portraitWidthRatio: '#portrait-width-ratio',
@@ -375,6 +387,8 @@ export const $ = {
     portraitLeftNodeUUID: '#portrait-left-node-uuid',
     portraitRightNodeUUID: '#portrait-right-node-uuid',
     portraitMinMax: '#portrait-min-max',
+    portraitFollowNode: '#portrait-follow-node',
+    portraitFollowedNodeUUID: '#portrait-followed-node-uuid',
     portraitVerSpaceType: '#portrait-ver-space-type',
     portraitHorSpaceType: '#portrait-hor-space-type',
     portraitFlipX: '#enable-portrait-flip-x',
@@ -400,6 +414,8 @@ export const $ = {
     landscapeBottomNodeUUID: '#landscape-bottom-node-uuid',
     landscapeLeftNodeUUID: '#landscape-left-node-uuid',
     landscapeRightNodeUUID: '#landscape-right-node-uuid',
+    landscapeFollowNode: '#landscape-follow-node',
+    landscapeFollowedNodeUUID: '#landscape-followed-node-uuid',
     landscapeMinMax: '#landscape-min-max',
     landscapeVerSpaceType: '#landscape-ver-space-type',
     landscapeHorSpaceType: '#landscape-hor-space-type',
@@ -418,6 +434,71 @@ export const $ = {
 };
 
 export const methodList = {
+
+    cellOnClick: (_this: any, clickedCell: any, tree: any) => {
+        for (var i = 0; i < tree.length; i++) {
+            const e = tree[i];
+            e.cell.style.background = "#303C4A";
+        }
+        clickedCell.style.background = "#F58D1E";
+
+        if (clickedCell.id.includes("portrait")) {
+            //console.log("P");
+            _this.dump.value.portraitAlignment.value = clickedCell.id;
+            _this.$.portraitAlignment.dispatch('change-dump');
+
+            if (!_this.dump.value.enableLandscape.value) {
+                _this.dump.value.landscapeAlignment.value = clickedCell.id.replace("portrait", "landscape");
+                _this.$.landscapeAlignment.dispatch('change-dump');
+            }
+        } else {
+            //console.log("L");
+            _this.dump.value.landscapeAlignment.value = clickedCell.id;
+            _this.$.landscapeAlignment.dispatch('change-dump');
+        }
+        //console.log("????????????????", _this.dump.value.portraitAlignment.value)
+    },
+
+    getLastCell: (_this: any, id: any) => {
+        if (id == "portrait-top-left") {
+            return _this.$.portraitTopLeft;
+        } else if (id == "portrait-top-center") {
+            return _this.$.portraitTopCenter;
+        } else if (id == "portrait-top-right") {
+            return _this.$.portraitTopRight;
+        } else if (id == "portrait-mid-left") {
+            return _this.$.portraitMidLeft;
+        } else if (id == "portrait-mid-center") {
+            return _this.$.portraitMidCenter;
+        } else if (id == "portrait-mid-right") {
+            return _this.$.portraitMidRight;
+        } else if (id == "portrait-bottom-left") {
+            return _this.$.portraitBottomLeft;
+        } else if (id == "portrait-bottom-center") {
+            return _this.$.portraitBottomCenter;
+        } else if (id == "portrait-bottom-right") {
+            return _this.$.portraitBottomRight;
+        } else if (id == "landscape-top-left") {
+            return _this.$.landscapeTopLeft;
+        } else if (id == "landscape-top-center") {
+            return _this.$.landscapeTopCenter;
+        } else if (id == "landscape-top-right") {
+            return _this.$.landscapeTopRight;
+        } else if (id == "landscape-mid-left") {
+            return _this.$.landscapeMidLeft;
+        } else if (id == "landscape-mid-center") {
+            return _this.$.landscapeMidCenter;
+        } else if (id == "landscape-mid-right") {
+            return _this.$.landscapeMidRight;
+        } else if (id == "landscape-bottom-left") {
+            return _this.$.landscapeBottomLeft;
+        } else if (id == "landscape-bottom-center") {
+            return _this.$.landscapeBottomCenter;
+        } else if (id == "landscape-bottom-right") {
+            return _this.$.landscapeBottomRight;
+        }
+    },
+
     checkEnableLandscape: (_this: any) => {
         if (_this.dump.value.enableLandscape.value == true) {
             _this.$.disabledContent.className = "";
@@ -486,32 +567,88 @@ export const methodList = {
         })
     },
 
-    changeWidthHeightRatioCursorsColor: (_this: any) => {
-        const circularWidthHandler = _this.$.portraitWidthRatio.$cursor.getElementsByTagName("div")[0];
-        const circularWidthVal = +_this.dump.value.portraitWidthRatio.value;
-        const circularHeightHandler = _this.$.portraitHeightRatio.$cursor.getElementsByTagName("div")[0];
-        const circularHeightVal = +_this.dump.value.portraitHeightRatio.value;
+    changeWidthHeightRatioCursorsColor: (_this: any, type: number = 1) => {
+        let circularWidthHandler;
+        let circularHeightHandler;
+        if (type == 1) { // portrait
+            circularWidthHandler = _this.$.portraitWidthRatio.$cursor.getElementsByTagName("div")[0];
+            circularHeightHandler = _this.$.portraitHeightRatio.$cursor.getElementsByTagName("div")[0];
+        } else { // landscape
+            circularWidthHandler = _this.$.landscapeWidthRatio.$cursor.getElementsByTagName("div")[0];
+            circularHeightHandler = _this.$.landscapeHeightRatio.$cursor.getElementsByTagName("div")[0];
+        }
 
-        if (_this.dump.value.portraitMinMax.value == 1) {
-            if (circularWidthVal < circularHeightVal) {
-                circularWidthHandler.style.borderColor = "green"
-                circularHeightHandler.style.borderColor = "red"
+        if (_this.dump.value.usingMinOrMax.value == 1) {
+            circularWidthHandler.style.borderColor = "#229B2F" //green
+            circularHeightHandler.style.borderColor = "#9B8622" // yellow
+        } else if (_this.dump.value.usingMinOrMax.value == 2) {
+            circularWidthHandler.style.borderColor = "#9B8622" // yellow
+            circularHeightHandler.style.borderColor = "#229B2F" //green
+        } else {
+            circularWidthHandler.style.borderColor = "#CACACA" // white
+            circularHeightHandler.style.borderColor = "#CACACA" // white
+        }
+    },
+
+    setFollowedNodeInitialValues: (_this: any, type: number) => {
+        if (type == 1) {
+            if (_this.dump.value.portraitFollowNode.value == true) {
+                _this.$.portraitFollowedNodeUUID.style.pointerEvents = "auto";
+                _this.$.portraitFollowedNodeUUID.style.opacity = "1";
+
+                if (_this.dump.value.portraitFollowedNodeUUID.value) {
+                    _this.$.portraitFollowedNodeUUID.$area.style.backgroundColor = "#227F9B";
+                } else {
+                    _this.$.portraitFollowedNodeUUID.$area.style.backgroundColor = "transparent";
+                }
+
+                _this.$.portraitWidget.style.pointerEvents = "none";
+                _this.$.portraitWidget.style.opacity = 0.4;
             } else {
-                circularWidthHandler.style.borderColor = "red"
-                circularHeightHandler.style.borderColor = "green"
-            }
-        } else if (_this.dump.value.portraitMinMax.value == 2) {
-            if (circularWidthVal > circularHeightVal) {
-                circularWidthHandler.style.borderColor = "green"
-                circularHeightHandler.style.borderColor = "red"
-            } else {
-                circularWidthHandler.style.borderColor = "red"
-                circularHeightHandler.style.borderColor = "green"
+                _this.$.portraitFollowedNodeUUID.style.pointerEvents = "none";
+                _this.$.portraitFollowedNodeUUID.style.opacity = "0.4";
+                //console.log(_this.$.portraitFollowedNodeUUID)
+                _this.$.portraitFollowedNodeUUID.$area.style.backgroundColor = "transparent";
+
+                _this.$.portraitWidget.style.pointerEvents = "initial";
+                _this.$.portraitWidget.style.opacity = 1;
             }
         } else {
-            circularWidthHandler.style.borderColor = "white"
-            circularHeightHandler.style.borderColor = "white"
+            if (_this.dump.value.landscapeFollowNode.value == true) {
+                _this.$.landscapeFollowedNodeUUID.style.pointerEvents = "auto";
+                _this.$.landscapeFollowedNodeUUID.style.opacity = "1";
+
+                _this.$.landscapeWidget.style.pointerEvents = "none";
+                _this.$.landscapeWidget.style.opacity = 0.4;
+            } else {
+                _this.$.landscapeFollowedNodeUUID.style.pointerEvents = "none";
+                _this.$.landscapeFollowedNodeUUID.style.opacity = "0.4";
+
+                _this.$.landscapeWidget.style.pointerEvents = "initial";
+                _this.$.landscapeWidget.style.opacity = 1;
+            }
         }
+
+    },
+
+    openTab: (_this: any, target: any, tabName: any) => {
+        _this.$.portrait.style.display = "none";
+        _this.$.landscape.style.display = "none";
+        _this.$.settings.style.display = "none";
+
+        _this.$.portraitButton.className = _this.$.portraitButton.className.replace(" active", "");
+        _this.$.landscapeButton.className = _this.$.landscapeButton.className.replace(" active", "");
+        _this.$.settingsButton.className = _this.$.settingsButton.className.replace(" active", "");
+
+        if (tabName == "Portrait") {
+            _this.$.portrait.style.display = "block";
+        } else if (tabName == "Landscape") {
+            _this.$.landscape.style.display = "block";
+        } else {
+            _this.$.settings.style.display = "block";
+        }
+
+        target.className += " active";
     }
 }
 
@@ -534,39 +671,31 @@ export function update(this: PanelThis, dump: any) {
         handler.htmlEl.value = this.dump.value[handler.scriptEl].value;
     });
 
-    //console.log("TEST123")
 
-    //if (!this.oneTimeFlag) {
-    //this.oneTimeFlag = true;
     // //if .active class added so classList length is 1
-    const lastCell = getLastCell(this, this.$.portraitButton.classList.length == 1 ? this.dump.value.portraitAlignment.value : this.dump.value.landscapeAlignment.value);
-    cellOnClick(this, lastCell, this.tree);
+    const lastCell = methodList.getLastCell(this, this.$.portraitButton.classList.length == 1 ? this.dump.value.portraitAlignment.value : this.dump.value.landscapeAlignment.value);
+    methodList.cellOnClick(this, lastCell, this.tree);
 
-    // setTimeout(() => {
-    //     this.oneTimeFlag = false;
-    // }, 500);
-    //}
-
-    //if (!this.oneTimeFlag) {
-    //this.oneTimeFlag = true;
     methodList.checkEnableLandscape(this);
+
+    if (this.$.portraitButton.classList.length == 1 && this.dump.value.enableLandscape.value == false) {
+        methodList.setFollowedNodeInitialValues(this, 1);
+        methodList.changeWidthHeightRatioCursorsColor(this, 1);
+    } else {
+        methodList.setFollowedNodeInitialValues(this, 2);
+        methodList.changeWidthHeightRatioCursorsColor(this, 2);
+    }
 
     if (!this.oneTimeFlag) {
         this.oneTimeFlag = true;
         methodList.openTabAccordingToOrientation(this);
     }
-
-
 }
+
 export function ready(this: PanelThis) {
     // Listen for commit events on the input, update the dump data when the input commits data, and use prop to send change-dump events
     //console.log("READY")
-    // const refreshCell = () => {
-    //     //sometimes when a ref node is added, node placement is not updated, to fix this I added this method
-    //     const lastCell = getLastCell(this, this.dump.value.portraitAlignment.value);
-    //     cellOnClick(this, lastCell, this.tree);
-    // }
-    //console.log("FROM READY");
+
 
     this.componentHandlers = [
         {
@@ -578,8 +707,6 @@ export function ready(this: PanelThis) {
                     this.dump.value.landscapeWidthRatio.value = this.dump.value.portraitWidthRatio.value;
                     this.$.landscapeWidthRatio.dispatch("change-dump")
                 }
-
-                methodList.changeWidthHeightRatioCursorsColor(this);
             },
         },
         {
@@ -591,8 +718,6 @@ export function ready(this: PanelThis) {
                     this.dump.value.landscapeHeightRatio.value = this.dump.value.portraitHeightRatio.value;
                     this.$.landscapeHeightRatio.dispatch("change-dump")
                 }
-
-                methodList.changeWidthHeightRatioCursorsColor(this);
             }
         },
         {
@@ -691,6 +816,34 @@ export function ready(this: PanelThis) {
                 if (!this.dump.value.enableLandscape.value) {
                     this.dump.value.landscapeBottomNodeUUID.value = this.dump.value.portraitBottomNodeUUID.value;
                     this.$.landscapeBottomNodeUUID.dispatch("change-dump")
+                }
+            }
+        },
+        {
+            htmlEl: this.$.portraitFollowNode,
+            scriptEl: "portraitFollowNode",
+            onChange: true,
+            callback: () => {
+                methodList.setFollowedNodeInitialValues(this, 1);
+            },
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeFollowNode.value = this.dump.value.portraitFollowNode.value;
+                    this.$.landscapeFollowNode.dispatch("change-dump")
+                }
+            }
+        },
+        {
+            htmlEl: this.$.portraitFollowedNodeUUID,
+            scriptEl: "portraitFollowedNodeUUID",
+            onChange: true,
+            callback: () => {
+
+            },
+            afterCallback: () => {
+                if (!this.dump.value.enableLandscape.value) {
+                    this.dump.value.landscapeFollowedNodeUUID.value = this.dump.value.portraitFollowedNodeUUID.value;
+                    this.$.landscapeFollowedNodeUUID.dispatch("change-dump")
                 }
             }
         },
@@ -805,6 +958,22 @@ export function ready(this: PanelThis) {
             //     refreshCell();
             // }
         },
+        {
+            htmlEl: this.$.landscapeFollowNode,
+            scriptEl: "landscapeFollowNode",
+            onChange: true,
+            callback: () => {
+                methodList.setFollowedNodeInitialValues(this, 2);
+            }
+        },
+        {
+            htmlEl: this.$.landscapeFollowedNodeUUID,
+            scriptEl: "landscapeFollowedNodeUUID",
+            onChange: true,
+            callback: () => {
+
+            }
+        },
 
         {
             htmlEl: this.$.rotateCanvas,
@@ -895,31 +1064,12 @@ export function ready(this: PanelThis) {
         }
     });
 
-    let openTab = (target: any, tabName: any) => {
-        this.$.portrait.style.display = "none";
-        this.$.landscape.style.display = "none";
-        this.$.settings.style.display = "none";
-
-        this.$.portraitButton.className = this.$.portraitButton.className.replace(" active", "");
-        this.$.landscapeButton.className = this.$.landscapeButton.className.replace(" active", "");
-        this.$.settingsButton.className = this.$.settingsButton.className.replace(" active", "");
-
-        if (tabName == "Portrait") {
-            this.$.portrait.style.display = "block";
-        } else if (tabName == "Landscape") {
-            this.$.landscape.style.display = "block";
-        } else {
-            this.$.settings.style.display = "block";
-        }
-
-        target.className += " active";
-    }
 
     this.$.portraitButton.onclick = (canRotateCanvas: any = true) => {
-        openTab(this.$.portraitButton, 'Portrait')
+        methodList.openTab(this, this.$.portraitButton, 'Portrait')
 
-        const lastCell = getLastCell(this, this.dump.value.portraitAlignment.value);
-        cellOnClick(this, lastCell, this.tree);
+        const lastCell = methodList.getLastCell(this, this.dump.value.portraitAlignment.value);
+        methodList.cellOnClick(this, lastCell, this.tree);
 
         if (canRotateCanvas && this.dump.value.enableLandscape.value) {
             this.dump.value.rotateCanvasPortrait.value = true;
@@ -928,20 +1078,20 @@ export function ready(this: PanelThis) {
     }
 
     this.$.landscapeButton.onclick = (e: any) => {
-        openTab(this.$.landscapeButton, 'Landscape')
+        methodList.openTab(this, this.$.landscapeButton, 'Landscape')
 
-        const lastCell = getLastCell(this, this.dump.value.landscapeAlignment.value);
-        cellOnClick(this, lastCell, this.tree);
+        const lastCell = methodList.getLastCell(this, this.dump.value.landscapeAlignment.value);
+        methodList.cellOnClick(this, lastCell, this.tree);
 
         this.dump.value.rotateCanvasLandscape.value = true;
         this.$.rotateCanvasLandscape.dispatch('change-dump');
     }
 
     this.$.settingsButton.onclick = (e: any) => {
-        openTab(this.$.settingsButton, 'Settings')
+        methodList.openTab(this, this.$.settingsButton, 'Settings')
     }
 
-    openTab(this.$.portraitButton, 'Portrait');
+    methodList.openTab(this, this.$.portraitButton, 'Portrait');
 
     this.tree = [
         {
@@ -1006,7 +1156,7 @@ export function ready(this: PanelThis) {
 
     this.tree.forEach((e: any, i: number) => {
         e.cell.addEventListener('confirm', () => {
-            cellOnClick(this, e.cell, this.tree);
+            methodList.cellOnClick(this, e.cell, this.tree);
         });
     })
 
@@ -1014,69 +1164,4 @@ export function ready(this: PanelThis) {
         methodList.copyPastePortraitValues(this);
     }
 
-}
-
-
-function cellOnClick(_this: any, clickedCell: any, tree: any) {
-    for (var i = 0; i < tree.length; i++) {
-        const e = tree[i];
-        e.cell.style.background = "#303C4A";
-    }
-    clickedCell.style.background = "#F58D1E";
-
-    if (clickedCell.id.includes("portrait")) {
-        //console.log("P");
-        _this.dump.value.portraitAlignment.value = clickedCell.id;
-        _this.$.portraitAlignment.dispatch('change-dump');
-
-        if (!_this.dump.value.enableLandscape.value) {
-            _this.dump.value.landscapeAlignment.value = clickedCell.id.replace("portrait", "landscape");
-            _this.$.landscapeAlignment.dispatch('change-dump');
-        }
-    } else {
-        //console.log("L");
-        _this.dump.value.landscapeAlignment.value = clickedCell.id;
-        _this.$.landscapeAlignment.dispatch('change-dump');
-    }
-    //console.log("????????????????", _this.dump.value.portraitAlignment.value)
-}
-
-function getLastCell(_this: any, id: any) {
-    if (id == "portrait-top-left") {
-        return _this.$.portraitTopLeft;
-    } else if (id == "portrait-top-center") {
-        return _this.$.portraitTopCenter;
-    } else if (id == "portrait-top-right") {
-        return _this.$.portraitTopRight;
-    } else if (id == "portrait-mid-left") {
-        return _this.$.portraitMidLeft;
-    } else if (id == "portrait-mid-center") {
-        return _this.$.portraitMidCenter;
-    } else if (id == "portrait-mid-right") {
-        return _this.$.portraitMidRight;
-    } else if (id == "portrait-bottom-left") {
-        return _this.$.portraitBottomLeft;
-    } else if (id == "portrait-bottom-center") {
-        return _this.$.portraitBottomCenter;
-    } else if (id == "portrait-bottom-right") {
-        return _this.$.portraitBottomRight;
-    } else if (id == "landscape-top-left") {
-        return _this.$.landscapeTopLeft;
-    } else if (id == "landscape-top-center") {
-        return _this.$.landscapeTopCenter;
-    } else if (id == "landscape-top-right") {
-        return _this.$.landscapeTopRight;
-    } else if (id == "landscape-mid-left") {
-        return _this.$.landscapeMidLeft;
-    } else if (id == "landscape-mid-center") {
-        return _this.$.landscapeMidCenter;
-    } else if (id == "landscape-mid-right") {
-        return _this.$.landscapeMidRight;
-    } else if (id == "landscape-bottom-left") {
-        return _this.$.landscapeBottomLeft;
-    } else if (id == "landscape-bottom-center") {
-        return _this.$.landscapeBottomCenter;
-    } else if (id == "landscape-bottom-right") {
-        return _this.$.landscapeBottomRight;
-    }
 }
