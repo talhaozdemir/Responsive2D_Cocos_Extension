@@ -1,6 +1,5 @@
 import { _decorator, Component, Node, CCFloat, Enum, view, UITransform, screen, find, Vec3, Canvas } from 'cc';
 import { EDITOR } from 'cc/env';
-//import { DynamicCanvas } from 'db://responsive2d/DynamicCanvas';
 const { ccclass, property, disallowMultiple, executeInEditMode } = _decorator;
 
 @ccclass('Responsive2D')
@@ -149,8 +148,10 @@ export class Responsive2D extends Component {
 
         }
 
-        this.rotateUiCanvas();
-        this.switchDevice();
+        if (EDITOR) {
+            this.rotateUiCanvas();
+            this.switchDevice();
+        }
 
         const node = this.node;
         this.nodeInd = this.node.parent.children.indexOf(node);
@@ -214,7 +215,7 @@ export class Responsive2D extends Component {
         let rightNode = null;
         let topNode = null;
         let bottomNode = null;
-        let followedNode = null;
+
         this.refNodes = [];
         allChildNodes.children.forEach(child => {
             if (child.uuid == leftNodeUUID) {
@@ -236,11 +237,12 @@ export class Responsive2D extends Component {
                 bottomNode = child;
                 this.refNodes.push(bottomNode);
             }
-
-            if (child.uuid == followedNodeUUID) {
-                followedNode = child;
-            }
         });
+
+        let followedNode;
+        if (canFollowNode && followedNodeUUID) {
+            followedNode = findFollewedNode(followedNodeUUID);
+        }
 
 
         //console.log("RESPONSIVE 2D START", this.node.name, this.node.children.length, this.isCalculatingContainerBounds, this.oneTimeExecution)
@@ -273,6 +275,14 @@ export class Responsive2D extends Component {
         this.resizeRefNodesIfTheirRenderOrdersAreAfterThisNode();
 
         if (leftNode) {
+            const leftNodeInd = leftNode.parent.children.indexOf(leftNode);
+            if (leftNodeInd > this.nodeInd) {
+                const r2d = leftNode.getComponent(Responsive2D);
+                if (r2d) {
+                    r2d.resize();
+                }
+            }
+
             const leftNodeTransform = leftNode.getComponent(UITransform);
             leftNode.displayWidth = leftNodeTransform.width * Math.abs(leftNode.scale.x);
             leftNode.displayHeight = leftNodeTransform.height * Math.abs(leftNode.scale.y);
@@ -283,6 +293,14 @@ export class Responsive2D extends Component {
         }
 
         if (rightNode) {
+            const rightNodeInd = rightNode.parent.children.indexOf(rightNode);
+            if (rightNodeInd > this.nodeInd) {
+                const r2d = rightNode.getComponent(Responsive2D);
+                if (r2d) {
+                    r2d.resize();
+                }
+            }
+
             const rightNodeTransform = rightNode.getComponent(UITransform);
             rightNode.displayWidth = rightNodeTransform.width * Math.abs(rightNode.scale.x);
             rightNode.displayHeight = rightNodeTransform.height * Math.abs(rightNode.scale.y);
@@ -293,6 +311,14 @@ export class Responsive2D extends Component {
         }
 
         if (topNode) {
+            const topNodeInd = topNode.parent.children.indexOf(topNode);
+            if (topNodeInd > this.nodeInd) {
+                const r2d = topNode.getComponent(Responsive2D);
+                if (r2d) {
+                    r2d.resize();
+                }
+            }
+
             const topNodeTransform = topNode.getComponent(UITransform);
             topNode.displayWidth = topNodeTransform.width * Math.abs(topNode.scale.x);
             topNode.displayHeight = topNodeTransform.height * Math.abs(topNode.scale.y);
@@ -305,7 +331,10 @@ export class Responsive2D extends Component {
         if (bottomNode) {
             const bottomNodeInd = bottomNode.parent.children.indexOf(bottomNode);
             if (bottomNodeInd > this.nodeInd) {
-                bottomNode.getComponent(Responsive2D).resize();
+                const r2d = bottomNode.getComponent(Responsive2D);
+                if (r2d) {
+                    r2d.resize();
+                }
             }
 
             const bottomNodeTransform = bottomNode.getComponent(UITransform);
@@ -318,9 +347,9 @@ export class Responsive2D extends Component {
         }
 
         if (canFollowNode && followedNode) {
-            const followedNodeInd = followedNode.parent.children.indexOf(followedNode);
-            followedNode.getComponent(Responsive2D).resize();
-            if (followedNodeInd > this.nodeInd) {
+            const r2d = followedNode.getComponent(Responsive2D);
+            if (r2d) {
+                r2d.resize();
             }
 
             const followedNodeTransform = followedNode.getComponent(UITransform);
@@ -363,34 +392,65 @@ export class Responsive2D extends Component {
         //console.log(nodeDisplayWidth, this.contAnchorX, this.contAnchorXInEditor, this.node.name)
         //console.log(widthRatio, heightRatio)
 
+        if (canFollowNode && followedNode) {
+            followedNode.worldPos = getWorldPos(this.node, followedNode);
+        }
+
         const splittedAlignment = alignment.split("-");
 
         if (alignment) {
-            var space;
+            var hSpace;
             if (horizontalSpaceType == 1) {
-                space = (horSpace * 0.01) * w;
+                hSpace = (horSpace * 0.01) * w;
             } else if (horizontalSpaceType == 2) {
-                space = horSpace;
+                hSpace = horSpace;
             } else if (horizontalSpaceType == 3) {
-                space = (horSpace * 0.01) * nodeDisplayWidth;
+                hSpace = (horSpace * 0.01) * nodeDisplayWidth;
             } else if (horizontalSpaceType == 4) { // left node
-                space = (horSpace * 0.01) * (leftNode ? leftNode.displayWidth : width);
-                !leftNode && console.warn("leftNode cannot found! Using available width space for " + this.node.name);
+                hSpace = (horSpace * 0.01) * (leftNode ? leftNode.displayWidth : width);
+                !leftNode && console.warn("leftNode cannot found! Using available width hSpace for " + this.node.name);
             } else if (horizontalSpaceType == 5) { // right node
-                space = (horSpace * 0.01) * (rightNode ? rightNode.displayWidth : width);
-                !rightNode && console.warn("rightNode cannot found! Using available width space for " + this.node.name);
+                hSpace = (horSpace * 0.01) * (rightNode ? rightNode.displayWidth : width);
+                !rightNode && console.warn("rightNode cannot found! Using available width hSpace for " + this.node.name);
             } else if (horizontalSpaceType == 6) { // top node
-                space = (horSpace * 0.01) * (topNode ? topNode.displayWidth : width);
-                !topNode && console.warn("topNode cannot found! Using available width space for " + this.node.name);
+                hSpace = (horSpace * 0.01) * (topNode ? topNode.displayWidth : width);
+                !topNode && console.warn("topNode cannot found! Using available width hSpace for " + this.node.name);
             } else if (horizontalSpaceType == 7) { // bottom node
-                space = (horSpace * 0.01) * (bottomNode ? bottomNode.displayWidth : width);
-                !bottomNode && console.warn("bottomNode cannot found! Using available width space for " + this.node.name);
+                hSpace = (horSpace * 0.01) * (bottomNode ? bottomNode.displayWidth : width);
+                !bottomNode && console.warn("bottomNode cannot found! Using available width hSpace for " + this.node.name);
+            } else if (horizontalSpaceType == 8) { // followed node
+                hSpace = (horSpace * 0.01) * (followedNode ? followedNode.displayWidth : width);
+                !followedNode && console.warn("followedNode cannot found! Using available width hSpace for " + this.node.name);
+            }
+
+            var vSpace;
+            if (verticalSpaceType == 1) {
+                vSpace = (verSpace * 0.01) * h;
+            } else if (verticalSpaceType == 2) {
+                vSpace = verSpace;
+            } else if (verticalSpaceType == 3) {
+                vSpace = (verSpace * 0.01) * nodeDisplayHeight;
+            } else if (verticalSpaceType == 4) { // left node
+                vSpace = (verSpace * 0.01) * (leftNode ? leftNode.displayHeight : height);
+                !leftNode && console.warn("leftNode cannot found! Using available height vSpace for " + this.node.name);
+            } else if (verticalSpaceType == 5) { // right node
+                vSpace = (verSpace * 0.01) * (rightNode ? rightNode.displayHeight : height);
+                !rightNode && console.warn("rightNode cannot found! Using available height vSpace for " + this.node.name);
+            } else if (verticalSpaceType == 6) { // top node
+                vSpace = (verSpace * 0.01) * (topNode ? topNode.displayHeight : height);
+                !topNode && console.warn("topNode cannot found! Using available height vSpace for " + this.node.name);
+            } else if (verticalSpaceType == 7) { // bottom node
+                vSpace = (verSpace * 0.01) * (bottomNode ? bottomNode.displayHeight : height);
+                !bottomNode && console.warn("bottomNode cannot found! Using available height vSpace for " + this.node.name);
+            } else if (verticalSpaceType == 8) { // follow node
+                vSpace = (verSpace * 0.01) * (followedNode ? followedNode.displayHeight : height);
+                !followedNode && console.warn("followedNode cannot found! Using available height vSpace for " + this.node.name);
             }
 
             if (canFollowNode && followedNode) {
                 node.setPosition(
-                    this.getWorldPos(followedNode).x + space,
-                    node.position.y,
+                    followedNode.worldPos.x + hSpace,
+                    followedNode.worldPos.y + vSpace,
                     node.position.z
                 );
                 return;
@@ -413,7 +473,7 @@ export class Responsive2D extends Component {
 
 
                     node.setPosition(
-                        left + space + offsetWidth,
+                        left + hSpace + offsetWidth,
                         node.position.y,
                         node.position.z
                     );
@@ -433,7 +493,7 @@ export class Responsive2D extends Component {
 
 
                     node.setPosition(
-                        0 + space + (left + right) * 0.5 + offsetWidth,
+                        0 + hSpace + (left + right) * 0.5 + offsetWidth,
                         node.position.y,
                         node.position.z
                     );
@@ -452,43 +512,11 @@ export class Responsive2D extends Component {
                     }
 
                     node.setPosition(
-                        right + space + offsetWidth,
+                        right + hSpace + offsetWidth,
                         node.position.y,
                         node.position.z
                     );
                     break;
-            }
-        }
-
-        if (alignment) {
-            var space;
-            if (verticalSpaceType == 1) {
-                space = (verSpace * 0.01) * h;
-            } else if (verticalSpaceType == 2) {
-                space = verSpace;
-            } else if (verticalSpaceType == 3) {
-                space = (verSpace * 0.01) * nodeDisplayHeight;
-            } else if (verticalSpaceType == 4) { // left node
-                space = (verSpace * 0.01) * (leftNode ? leftNode.displayHeight : height);
-                !leftNode && console.warn("leftNode cannot found! Using available height space for " + this.node.name);
-            } else if (verticalSpaceType == 5) { // right node
-                space = (verSpace * 0.01) * (rightNode ? rightNode.displayHeight : height);
-                !rightNode && console.warn("rightNode cannot found! Using available height space for " + this.node.name);
-            } else if (verticalSpaceType == 6) { // top node
-                space = (verSpace * 0.01) * (topNode ? topNode.displayHeight : height);
-                !topNode && console.warn("topNode cannot found! Using available height space for " + this.node.name);
-            } else if (verticalSpaceType == 7) { // bottom node
-                space = (verSpace * 0.01) * (bottomNode ? bottomNode.displayHeight : height);
-                !bottomNode && console.warn("bottomNode cannot found! Using available height space for " + this.node.name);
-            }
-
-            if (canFollowNode && followedNode) {
-                node.setPosition(
-                    node.position.x,
-                    this.getWorldPos(followedNode).y + space,
-                    node.position.z
-                );
-                return;
             }
 
             switch (splittedAlignment[1]) {
@@ -506,7 +534,7 @@ export class Responsive2D extends Component {
 
                     node.setPosition(
                         node.position.x,
-                        top + space + offsetHeight,
+                        top + vSpace + offsetHeight,
                         node.position.z
                     );
                     break;
@@ -524,7 +552,7 @@ export class Responsive2D extends Component {
 
                     node.setPosition(
                         node.position.x,
-                        0 + space + (top + bottom) * 0.5 + offsetHeight,
+                        0 + vSpace + (top + bottom) * 0.5 + offsetHeight,
                         node.position.z
                     );
                     break;
@@ -542,7 +570,7 @@ export class Responsive2D extends Component {
 
                     node.setPosition(
                         node.position.x,
-                        bottom + space + offsetHeight,
+                        bottom + vSpace + offsetHeight,
                         node.position.z
                     );
                     break;
@@ -579,7 +607,7 @@ export class Responsive2D extends Component {
 
                 if (refNodeInd > this.nodeInd) {
 
-                    const responsivePluginOfRefNode = refNode.getComponent("Responsive2D");
+                    const responsivePluginOfRefNode = refNode.getComponent(Responsive2D);
 
                     if (responsivePluginOfRefNode) {
                         responsivePluginOfRefNode.resize();
@@ -675,13 +703,6 @@ export class Responsive2D extends Component {
         this.canUpdate = false;
     }
 
-    getWorldPos(targetNode) {
-
-        //console.log(this.node.getPathInHierarchy(), targetNode.getPathInHierarchy())
-
-        return { x: targetNode.position.x, y: targetNode.position.y }
-    }
-
 }
 
 function setEditorDeviceAndCanvasDesignResolution() {
@@ -758,4 +779,36 @@ function changeEditorSliderCursorColor(_this, type, scaleObj) {
     } else if (type == 3) {
         _this.usingMinOrMax = 0;
     }
+}
+
+function findFollewedNode(followedNodeUUID) {
+    let foundedNode;
+    function search(ch) {
+        if (ch.children.length == 0) {
+            return
+        }
+        for (let i = 0; i < ch.children.length; i++) {
+            const c = ch.children[i];
+            if (c.uuid == followedNodeUUID) {
+                foundedNode = c;
+                break;
+            } else {
+                if (c.children) {
+                    search(c);
+                }
+            }
+        }
+    }
+    search(find("Canvas"));
+    return foundedNode;
+}
+
+function getWorldPos(node, targetNode) {
+
+    const targetNodeParentUITransform = targetNode.parent.getComponent(UITransform);
+    const nodeParentUITransform = node.parent.getComponent(UITransform);
+
+    var targetNodeParentPos = targetNodeParentUITransform.convertToWorldSpaceAR(targetNode.position);
+    var nodeParentPos = nodeParentUITransform.convertToNodeSpaceAR(targetNodeParentPos);
+    return { x: nodeParentPos.x, y: nodeParentPos.y }
 }

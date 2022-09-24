@@ -24,12 +24,12 @@ package.json
                 }
             }
         },
-        "asset-db": {
-            "mount": {
-                "path": "./assets",
-                "readonly": true
-            }
-        }
+      //  "asset-db": {
+      //    "mount": {
+      //        "path": "./assets",
+      //        "readonly": true
+      //   }
+      //  }
     }
 }
 

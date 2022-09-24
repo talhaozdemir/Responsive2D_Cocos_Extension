@@ -231,6 +231,7 @@ exports.template = `
             <option value="5">right</option>
             <option value="6">top</option>
             <option value="7">bottom</option>
+            <option value="8">follow</option>
         </ui-select>
     </div>
     <div class="space-input">
@@ -244,6 +245,7 @@ exports.template = `
             <option value="5">right</option>
             <option value="6">top</option>
             <option value="7">bottom</option>
+            <option value="8">follow</option>
         </ui-select>
     </div>
     <ui-checkbox style="display: block; width: 70px;" value="false" id="enable-portrait-flip-x">Flip X</ui-checkbox>
@@ -301,8 +303,8 @@ exports.template = `
         <div class="empty-area"></div>
     </div>
 
-    <ui-checkbox style="margin-right: 10px" value="false" id="landscape-follow-node">Follow Node</ui-checkbox>
-    <ui-node droppable="cc.Node" id="landscape-followed-node-uuid"></ui-node>
+    <ui-checkbox style="margin-right: 10px; margin-top: 20px;" value="false" id="landscape-follow-node">Follow Node</ui-checkbox>
+    <ui-node style="margin-top: 20px;" droppable="cc.Node" id="landscape-followed-node-uuid"></ui-node>
 
     <div class="space-input" style="margin-top: 10px;">
         <label class="slider-label-narrow">Hor Space</label>
@@ -315,6 +317,7 @@ exports.template = `
             <option value="5">right</option>
             <option value="6">top</option>
             <option value="7">bottom</option>
+            <option value="8">follow</option>
         </ui-select>
     </div>
     <div class="space-input">
@@ -328,6 +331,7 @@ exports.template = `
             <option value="5">right</option>
             <option value="6">top</option>
             <option value="7">bottom</option>
+            <option value="8">follow</option>
         </ui-select>
     </div>
     <ui-checkbox style="display: block; width: 70px;" value="false" id="enable-landscape-flip-x">Flip X</ui-checkbox>
@@ -617,12 +621,19 @@ exports.methodList = {
             if (_this.dump.value.landscapeFollowNode.value == true) {
                 _this.$.landscapeFollowedNodeUUID.style.pointerEvents = "auto";
                 _this.$.landscapeFollowedNodeUUID.style.opacity = "1";
+                if (_this.dump.value.landscapeFollowedNodeUUID.value) {
+                    _this.$.landscapeFollowedNodeUUID.$area.style.backgroundColor = "#227F9B";
+                }
+                else {
+                    _this.$.landscapeFollowedNodeUUID.$area.style.backgroundColor = "transparent";
+                }
                 _this.$.landscapeWidget.style.pointerEvents = "none";
                 _this.$.landscapeWidget.style.opacity = 0.4;
             }
             else {
                 _this.$.landscapeFollowedNodeUUID.style.pointerEvents = "none";
                 _this.$.landscapeFollowedNodeUUID.style.opacity = "0.4";
+                _this.$.landscapeFollowedNodeUUID.$area.style.backgroundColor = "transparent";
                 _this.$.landscapeWidget.style.pointerEvents = "initial";
                 _this.$.landscapeWidget.style.opacity = 1;
             }
@@ -645,6 +656,26 @@ exports.methodList = {
             _this.$.settings.style.display = "block";
         }
         target.className += " active";
+    },
+    updateRefNodesBgColors: (_this) => {
+        let refs = [
+            { sc: _this.dump.value.portraitLeftNodeUUID, ht: _this.$.portraitLeftNodeUUID },
+            { sc: _this.dump.value.portraitRightNodeUUID, ht: _this.$.portraitRightNodeUUID },
+            { sc: _this.dump.value.portraitTopNodeUUID, ht: _this.$.portraitTopNodeUUID },
+            { sc: _this.dump.value.portraitBottomNodeUUID, ht: _this.$.portraitBottomNodeUUID },
+            { sc: _this.dump.value.landscapeLeftNodeUUID, ht: _this.$.landscapeLeftNodeUUID },
+            { sc: _this.dump.value.landscapeRightNodeUUID, ht: _this.$.landscapeRightNodeUUID },
+            { sc: _this.dump.value.landscapeTopNodeUUID, ht: _this.$.landscapeTopNodeUUID },
+            { sc: _this.dump.value.landscapeBottomNodeUUID, ht: _this.$.landscapeBottomNodeUUID },
+        ];
+        refs.forEach(ref => {
+            if (ref.sc.value) {
+                ref.ht.$area.style.backgroundColor = "#227F9B";
+            }
+            else {
+                ref.ht.$area.style.backgroundColor = "transparent";
+            }
+        });
     }
 };
 function update(dump) {
@@ -671,6 +702,7 @@ function update(dump) {
         exports.methodList.setFollowedNodeInitialValues(this, 2);
         exports.methodList.changeWidthHeightRatioCursorsColor(this, 2);
     }
+    exports.methodList.updateRefNodesBgColors(this);
     if (!this.oneTimeFlag) {
         this.oneTimeFlag = true;
         exports.methodList.openTabAccordingToOrientation(this);

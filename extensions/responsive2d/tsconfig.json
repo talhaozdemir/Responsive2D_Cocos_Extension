@@ -11,5 +11,6 @@
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
         "experimentalDecorators": true
-    }
+    },
+    //"exclude": ["./assets"]
 }
