@@ -217,7 +217,7 @@ export class Responsive2D extends Component {
         let bottomNode = null;
 
         this.refNodes = [];
-        allChildNodes.children.forEach(child => {
+        allChildNodes && allChildNodes.children.forEach(child => {
             if (child.uuid == leftNodeUUID) {
                 leftNode = child;
                 this.refNodes.push(leftNode);
